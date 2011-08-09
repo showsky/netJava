@@ -51,6 +51,7 @@ class handle implements Runnable
 {
     private Socket accept;
     private HashSet<Socket> room;
+    private String name;
     private int id;
     
     public handle(Socket client, HashSet<Socket> room)
@@ -89,7 +90,7 @@ class handle implements Runnable
      */
     public String speak(String content)
     {
-        return "[" +  this.id + "]Say:  " + content + "     [From]" + this.accept.getInetAddress();
+        return "[" +  this.name + "]Say:  " + content + "     [From]" + this.accept.getInetAddress();
     }
     
     public void run()
@@ -105,10 +106,16 @@ class handle implements Runnable
         try {  
             out = new PrintStream(this.accept.getOutputStream());
             in = new Scanner(this.accept.getInputStream());
+            
+            if(in.hasNextLine())
+            {
+                this.name = in.nextLine();
+            }
+            
             out.println("****************************");
             out.println("***Welcome ~!!!***");   
             out.println("****************************");
-            out.println(Runtime.getRuntime().maxMemory() / 1024 / 104 + "mb");   
+            out.println("記憶體: " + Runtime.getRuntime().totalMemory() / 1024 / 104 + "mb");   
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

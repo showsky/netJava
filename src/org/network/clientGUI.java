@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Scanner;
 
 import javax.swing.JTextPane;
@@ -97,7 +98,7 @@ public class clientGUI {
     private JTextField textStatus;
     private JTextField textServer;
     private JTextField textPort;
-    private JTextField textField_1;
+    private JTextField textName;
 
     /**
      * Launch the application.
@@ -123,17 +124,18 @@ public class clientGUI {
         try {
             server = new Socket();
             addr = new InetSocketAddress(this.textServer.getText(), Integer.parseInt(this.textPort.getText()));
-            server.connect(addr);
+            this.textArea.append("資料連線中~!!!\n");
+            server.connect(addr, 3000);
             
             this.textStatus.setText("OnLine");
             InputStreamReader in = new InputStreamReader(server.getInputStream());
             b_in = new Scanner(in);
-            
             b_out = new PrintStream(server.getOutputStream());
+            b_out.println(this.textName.getText());
             
             new Thread(new view(b_in, textArea)).start();
             
-        } catch (SocketException e) {
+        } catch (SocketTimeoutException e) {
             this.textArea.append("目前沒有辦法連線~!!\n");
             this.textStatus.setText("OffLine");
         }catch (IOException e) {
@@ -163,12 +165,6 @@ public class clientGUI {
         initialize();
         
         /*
-         * 設定布局
-         */
-        CardLayout card = (CardLayout) this.frmV.getContentPane().getLayout();
-        card.next(this.frmV.getContentPane());
-        
-        /*
          * 進行初始連線 
          */
         this.server = new Socket();
@@ -181,6 +177,7 @@ public class clientGUI {
      */
     private void initialize() {
         frmV = new JFrame();
+        frmV.setAlwaysOnTop(true);
         frmV.setResizable(false);
         frmV.addWindowListener(new WindowAdapter() {
             @Override
@@ -212,6 +209,7 @@ public class clientGUI {
         panel_login.add(scrollPane_1);
         
         JTextArea textVersion = new JTextArea();
+        textVersion.setText("[作者]\r\nChing Ting\r\n[信箱]\r\nshowsky@gmail.com\r\n[功能]\r\n1.聊天室ID定義\r\n2.伺服器 IP 和 PROT 設定\r\n3.線上人數功能\r\n4.伺服器時間功能");
         textVersion.setEditable(false);
         scrollPane_1.setViewportView(textVersion);
         
@@ -219,16 +217,28 @@ public class clientGUI {
         labelVersion.setBounds(10, 10, 63, 15);
         panel_login.add(labelVersion);
         
-        JLabel lblid = new JLabel("設定ID");
-        lblid.setBounds(10, 249, 46, 15);
-        panel_login.add(lblid);
+        JLabel labelId = new JLabel("設定ID");
+        labelId.setBounds(10, 249, 46, 15);
+        panel_login.add(labelId);
         
-        textField_1 = new JTextField();
-        textField_1.setBounds(20, 274, 96, 21);
-        panel_login.add(textField_1);
-        textField_1.setColumns(10);
+        textName = new JTextField();
+        textName.setBounds(20, 274, 96, 21);
+        panel_login.add(textName);
+        textName.setColumns(10);
         
         JButton buttonReg = new JButton("註冊");
+        buttonReg.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent arg0) {
+                if(textName.getText().equals(""))
+                {
+                    JOptionPane.showMessageDialog(frmV, "請設定ID名稱");
+                }else
+                {
+                    CardLayout card = (CardLayout) frmV.getContentPane().getLayout();
+                    card.next(frmV.getContentPane());
+                }
+            }
+        });
         buttonReg.setVerticalAlignment(SwingConstants.BOTTOM);
         buttonReg.setBounds(128, 273, 87, 23);
         panel_login.add(buttonReg);
@@ -263,10 +273,11 @@ public class clientGUI {
         panel_main.add(buttonSend);
         
         JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setBounds(10, 10, 338, 188);
+        scrollPane.setBounds(10, 10, 355, 188);
         panel_main.add(scrollPane);
         
         textArea = new JTextArea();
+        textArea.setLineWrap(true);
         scrollPane.setViewportView(textArea);
         textArea.setAutoscrolls(true);
         textArea.setEditable(false);
@@ -329,17 +340,17 @@ public class clientGUI {
         
         textServer = new JTextField();
         textServer.setText("192.168.1.106");
-        textServer.setBounds(157, 205, 96, 21);
+        textServer.setBounds(165, 205, 96, 21);
         panel_main.add(textServer);
         textServer.setColumns(10);
         
         JLabel labelPort = new JLabel("PORT:");
-        labelPort.setBounds(261, 208, 37, 15);
+        labelPort.setBounds(267, 208, 37, 15);
         panel_main.add(labelPort);
         
         textPort = new JTextField();
         textPort.setText("9999");
-        textPort.setBounds(297, 205, 46, 21);
+        textPort.setBounds(308, 205, 46, 21);
         panel_main.add(textPort);
         textPort.setColumns(10);
         
