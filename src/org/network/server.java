@@ -19,33 +19,10 @@ import java.util.TimerTask;
 import javax.xml.crypto.Data;
 
 /**
- * 聊天室
- * 
- * [目前現有功能]
- * 1. uptime 執行時間
- * 2. online 線上人數
- * 
- * [預計增加功能]
- * 1.goole 翻譯
- * 2. 資料庫 log 處理
+ * Java 實作多人聊天室
  * @author Cheng-Ting
  * @version 0.1
  */
-
-class cleanTask extends TimerTask
-{
-    private HashSet<Socket> room = null;
-    
-    public cleanTask(HashSet<Socket> room)
-    {
-        this.room = room;
-    }
-    
-    public void run() 
-    {
-        
-    }
-}
 
 class handle implements Runnable
 {
@@ -126,18 +103,14 @@ class handle implements Runnable
         while(flag)
         {
             try {
-                //in = new Scanner(this.accept.getInputStream());
                 in.useDelimiter("\n");
-                //in.useLocale(Locale.getDefault());
                 if(in.hasNextLine())
                 {
                      content = in.nextLine();
                      
                     if("exit".equals(content))   //離開指令
                     {
-                        out.println("****************************");
-                        out.println("***bye bye ~!!!***");   
-                        out.println("****************************");   
+                        System.out.println(accept.getInetAddress() + "離開");
                         in.close();
                         out.close();
                         this.accept.close();
@@ -150,13 +123,21 @@ class handle implements Runnable
                     }else if("uptime".equals(content)) 
                     {
                         out.println("uptime:  " + System.currentTimeMillis() / 1000 + "s");
-                    }else 
+                    
+                    }else   //斷線
                     {
                         this.broadcast(content);   //處理廣播出去訊息
                     }
-                    
                     //Thread.sleep(1000);
                     
+                }else 
+                {
+                    System.out.println(accept.getInetAddress() + "斷線");
+                    in.close();
+                    out.close();
+                    this.accept.close();
+                    this.room.remove(this.accept);
+                    flag = false;   //跳出接收 Loop
                 }
             } catch (Exception e) {
                System.out.println(e.getStackTrace());

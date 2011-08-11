@@ -35,6 +35,13 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import javax.swing.JList;
+import java.awt.SystemColor;
+import java.awt.Color;
+import javax.swing.UIManager;
+import javax.swing.AbstractListModel;
+import javax.swing.ListSelectionModel;
+import javax.xml.ws.handler.MessageContext.Scope;
 
 /**
  * 處理背後的讀取訊息的 Thread
@@ -45,6 +52,8 @@ class view implements Runnable
 {
     private Scanner b_in;
     private JTextArea textPane;
+    private JTextField textStatus;
+    private Socket server;
     private boolean flag = true;
     
     /**
@@ -52,26 +61,31 @@ class view implements Runnable
      * @param b_in
      * @param textPane
      */
-    public view(Scanner b_in, JTextArea textPane)
+    public view(Scanner b_in, JTextArea textPane, JTextField textStatus, Socket server)
     {
         this.b_in = b_in;
         this.textPane = textPane;
-    }
-    
-    public void close()
-    {
-        this.flag = false;
+        this.textStatus = textStatus;
+        this.server = server;
     }
     
     public void run()
     {
-        while(true)
+        while(this.flag)
         {
             try {
                 if(b_in.hasNextLine())
                 {
-                    textPane.append(b_in.nextLine() + "\n");
-                    textPane.setCaretPosition(textPane.getDocument().getLength());
+                    this.textPane.append(b_in.nextLine() + "\n");
+                    this.textPane.setCaretPosition(textPane.getDocument().getLength());
+                }else 
+                {
+                    this.textPane.append("伺服器斷線\n");
+                    this.b_in.close();
+                    this.server.close();
+                    this.textStatus.setText("OffLine");
+                    this.server = new Socket();
+                    this.flag = false;
                 }
                 
                 //Thread.sleep(1000);
@@ -133,7 +147,7 @@ public class clientGUI {
             b_out = new PrintStream(server.getOutputStream());
             b_out.println(this.textName.getText());
             
-            new Thread(new view(b_in, textArea)).start();
+            new Thread(new view(b_in, textArea, textStatus, server)).start();
             
         } catch (SocketTimeoutException e) {
             this.textArea.append("目前沒有辦法連線~!!\n");
@@ -196,7 +210,7 @@ public class clientGUI {
             }
         });
         frmV.setTitle("聊天室 v0.1");
-        frmV.setBounds(100, 100, 381, 354);
+        frmV.setBounds(100, 100, 550, 354);
         frmV.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frmV.getContentPane().setLayout(new CardLayout(0, 0));
         
@@ -205,7 +219,7 @@ public class clientGUI {
         panel_login.setLayout(null);
         
         JScrollPane scrollPane_1 = new JScrollPane();
-        scrollPane_1.setBounds(21, 37, 318, 204);
+        scrollPane_1.setBounds(42, 35, 453, 204);
         panel_login.add(scrollPane_1);
         
         JTextArea textVersion = new JTextArea();
@@ -222,7 +236,7 @@ public class clientGUI {
         panel_login.add(labelId);
         
         textName = new JTextField();
-        textName.setBounds(20, 274, 96, 21);
+        textName.setBounds(42, 274, 96, 21);
         panel_login.add(textName);
         textName.setColumns(10);
         
@@ -240,7 +254,7 @@ public class clientGUI {
             }
         });
         buttonReg.setVerticalAlignment(SwingConstants.BOTTOM);
-        buttonReg.setBounds(128, 273, 87, 23);
+        buttonReg.setBounds(165, 273, 87, 23);
         panel_login.add(buttonReg);
         
         JPanel panel_main = new JPanel();
@@ -248,6 +262,7 @@ public class clientGUI {
         panel_main.setLayout(null);
         
         textField = new JTextField();
+        textField.setBackground(new Color(255, 255, 204));
         textField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent arg0) {
@@ -277,6 +292,7 @@ public class clientGUI {
         panel_main.add(scrollPane);
         
         textArea = new JTextArea();
+        textArea.setBackground(SystemColor.inactiveCaptionBorder);
         textArea.setLineWrap(true);
         scrollPane.setViewportView(textArea);
         textArea.setAutoscrolls(true);
@@ -311,6 +327,10 @@ public class clientGUI {
         JButton buttonConn = new JButton("連線");
         buttonConn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
+                
+                System.err.println(clientGUI.this.server.isConnected());
+                System.err.println(clientGUI.this.server.isClosed());
+                
                 if(clientGUI.this.textServer.getText().equals("") || clientGUI.this.textPort.getText().equals(""))
                 {
                     JOptionPane.showMessageDialog(frmV, "請輸入完整SERVER和PORT\n");
@@ -376,5 +396,23 @@ public class clientGUI {
         });
         buttonClose.setBounds(285, 289, 63, 23);
         panel_main.add(buttonClose);
+        
+        JScrollPane scrollPane_2 = new JScrollPane();
+        scrollPane_2.setBounds(375, 10, 159, 302);
+        panel_main.add(scrollPane_2);
+        
+        JList list = new JList();
+        list.setModel(new AbstractListModel() {
+            String[] values = new String[] {"ALL","Admin"};
+            public int getSize() {
+                return values.length;
+            }
+            public Object getElementAt(int index) {
+                return values[index];
+            }
+        });
+        list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        list.setBackground(SystemColor.inactiveCaption);
+        scrollPane_2.setViewportView(list);
     }
 }
