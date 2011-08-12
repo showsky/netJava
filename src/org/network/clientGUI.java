@@ -54,6 +54,7 @@ class view implements Runnable
     private JTextArea textPane;
     private JTextField textStatus;
     private Socket server;
+    private JList list;
     private boolean flag = true;
     
     /**
@@ -61,7 +62,7 @@ class view implements Runnable
      * @param b_in
      * @param textPane
      */
-    public view(Scanner b_in, JTextArea textPane, JTextField textStatus, Socket server)
+    public view(Scanner b_in, JTextArea textPane, JTextField textStatus,  Socket server)
     {
         this.b_in = b_in;
         this.textPane = textPane;
@@ -84,7 +85,6 @@ class view implements Runnable
                     this.b_in.close();
                     this.server.close();
                     this.textStatus.setText("OffLine");
-                    this.server = new Socket();
                     this.flag = false;
                 }
                 
@@ -153,7 +153,7 @@ public class clientGUI {
             this.textArea.append("目前沒有辦法連線~!!\n");
             this.textStatus.setText("OffLine");
         }catch (IOException e) {
-            this.textArea.append("Socket IO 錯誤~!!\n");
+            this.textArea.append("伺服器連接錯誤~!!\n");
         }
     }
     
@@ -163,7 +163,7 @@ public class clientGUI {
      */
     public void testSpeak(String content)
     {
-        if(clientGUI.this.server.isConnected())
+        if(clientGUI.this.server.isConnected() && !clientGUI.this.server.isClosed())
         {
             clientGUI.this.b_out.println(content);
         }else 
@@ -327,15 +327,11 @@ public class clientGUI {
         JButton buttonConn = new JButton("連線");
         buttonConn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                
-                System.err.println(clientGUI.this.server.isConnected());
-                System.err.println(clientGUI.this.server.isClosed());
-                
                 if(clientGUI.this.textServer.getText().equals("") || clientGUI.this.textPort.getText().equals(""))
                 {
                     JOptionPane.showMessageDialog(frmV, "請輸入完整SERVER和PORT\n");
                 }else {
-                    if(clientGUI.this.server.isConnected())
+                    if(clientGUI.this.server.isConnected() && !clientGUI.this.server.isClosed())
                     {
                         clientGUI.this.textArea.append("目前為連線狀態~!\n");
                     }else 
@@ -377,7 +373,7 @@ public class clientGUI {
         JButton buttonClose = new JButton("離線");
         buttonClose.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                if(clientGUI.this.server.isConnected())
+                if(clientGUI.this.server.isConnected() && !clientGUI.this.server.isClosed())
                 {
                     try {
                         clientGUI.this.b_out.println("quit");
@@ -386,6 +382,7 @@ public class clientGUI {
                     } catch (IOException e) {
                         clientGUI.this.textArea.append("關閉錯誤 ~!!\n");
                     }
+                    //重新建立一個新物件
                     clientGUI.this.server = new Socket();
                     clientGUI.this.textStatus.setText("OffLine");
                 }else 
@@ -402,15 +399,7 @@ public class clientGUI {
         panel_main.add(scrollPane_2);
         
         JList list = new JList();
-        list.setModel(new AbstractListModel() {
-            String[] values = new String[] {"ALL","Admin"};
-            public int getSize() {
-                return values.length;
-            }
-            public Object getElementAt(int index) {
-                return values[index];
-            }
-        });
+        
         list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         list.setBackground(SystemColor.inactiveCaption);
         scrollPane_2.setViewportView(list);
