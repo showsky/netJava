@@ -15,6 +15,8 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.xml.crypto.Data;
 
@@ -128,7 +130,6 @@ class handle implements Runnable
                     {
                         this.broadcast(content);   //處理廣播出去訊息
                     }
-                    //Thread.sleep(1000);
                     
                 }else 
                 {
@@ -148,21 +149,50 @@ class handle implements Runnable
     }
 }
 
+/*
+ * Server 端
+ */
 public class server {
-    public static void main(String[] args) throws Exception {
-        
-        HashSet<Socket> room = new HashSet<Socket>();
-        final int PORT = 9999;
-        ServerSocket server = new ServerSocket(PORT);
-        System.out.println("Server Start  " + new Date() );
-        while(true)
-        {
-            Socket accept = server.accept();
-            accept.setKeepAlive(true);
-            System.out.println(accept.getInetAddress());
-            room.add(accept);
-            new Thread(new handle(accept, room)).start();
-            
+    
+    private int port;
+    private HashSet<Socket> room = new HashSet<Socket>();
+    private ServerSocket server;
+    private ExecutorService service = Executors.newCachedThreadPool();
+    
+    public server(int port)
+    {
+        this.port = port;
+        try {
+            this.server = new ServerSocket(port);
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
         }
+    }
+    
+    public void listen()
+    {
+        System.out.println("Server Start  " + new Date() );
+        try {
+            while(true)
+            {
+                Socket accept = server.accept();
+                accept.setKeepAlive(true);
+                System.out.println(accept.getInetAddress());
+                this.room.add(accept);
+                service.submit(new handle(accept, this.room));
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    public void closeService()
+    {
+        this.service.shutdownNow();
+    }
+    
+    public static void main(String[] args) {
+        server local = new server(5566);
+        local.listen();
     }
 }
