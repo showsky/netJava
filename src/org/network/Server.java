@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
@@ -29,6 +30,7 @@ public class Server {
     private HashSet<Socket> room = new HashSet<Socket>();
     private ServerSocket server;
     private ExecutorService service = Executors.newCachedThreadPool();
+    private boolean flag = true;
     
     public Server(int port)
     {
@@ -54,11 +56,11 @@ public class Server {
     {
         System.out.println("Server Start  " + new Date() );
         try {
-            while(true)
+            while(this.flag)
             {
                 Socket accept = server.accept();
                 accept.setKeepAlive(true);
-                System.out.println(accept.getInetAddress());
+                System.out.println(accept.getInetAddress() + "連線");
                 this.room.add(accept);
                 service.submit(new Handle(accept, this.room));
             }
@@ -69,6 +71,8 @@ public class Server {
     
     public void closeService()
     {
+        this.service.shutdown();
         this.service.shutdownNow();
+        this.flag = false;
     }
 }

@@ -1,10 +1,13 @@
 [介紹]
 這是一個 Java 實作多人聊天的專案，用來練習學習的 Java 所實作的專案
 
-共有兩隻主要程式，為以下
+共有以下主要程式
 
 package org.network
-	server.java
+	Server.java
+	Handle.java
+	serverCommand;
+	serverGUI.java
 	clitentGUI.java
 
 [備註]
