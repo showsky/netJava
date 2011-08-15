@@ -1,24 +1,10 @@
 package org.network;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import javax.xml.crypto.Data;
 
 /**
  * Java 實作多人聊天室
@@ -26,14 +12,14 @@ import javax.xml.crypto.Data;
  * @version 0.1
  */
 
-class handle implements Runnable
+class Handle implements Runnable
 {
     private Socket accept;
     private HashSet<Socket> room;
     private String name;
     private int id;
     
-    public handle(Socket client, HashSet<Socket> room)
+    public Handle(Socket client, HashSet<Socket> room)
     {
         this.accept = client;
         this.room = room;
@@ -62,7 +48,6 @@ class handle implements Runnable
             }
         }  
     }
-    
     
     /*
      * 處理訊息的格式
@@ -146,53 +131,5 @@ class handle implements Runnable
             }
             
         }
-    }
-}
-
-/*
- * Server 端
- */
-public class server {
-    
-    private int port;
-    private HashSet<Socket> room = new HashSet<Socket>();
-    private ServerSocket server;
-    private ExecutorService service = Executors.newCachedThreadPool();
-    
-    public server(int port)
-    {
-        this.port = port;
-        try {
-            this.server = new ServerSocket(port);
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-    
-    public void listen()
-    {
-        System.out.println("Server Start  " + new Date() );
-        try {
-            while(true)
-            {
-                Socket accept = server.accept();
-                accept.setKeepAlive(true);
-                System.out.println(accept.getInetAddress());
-                this.room.add(accept);
-                service.submit(new handle(accept, this.room));
-            }
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-    
-    public void closeService()
-    {
-        this.service.shutdownNow();
-    }
-    
-    public static void main(String[] args) {
-        server local = new server(5566);
-        local.listen();
     }
 }
